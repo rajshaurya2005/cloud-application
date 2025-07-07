@@ -94,10 +94,29 @@ api_key = st.sidebar.text_input("Groq API Key", type="password", key="api_key",
                                help="Get your API key from https://console.groq.com/keys")
 
 # Model selection
-model = st.sidebar.selectbox("Model", 
-                            ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"], 
+# model = st.sidebar.selectbox("Model", 
+#                             ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"], 
+#                             key="model")
+model = st.sidebar.selectbox("Model",
+                            [
+                                "llama-3.3-70b-versatile",
+                                "qwen-qwq-32b",
+                                "qwen/qwen3-32b",
+                                "deepseek-r1-distill-llama-70b",
+                                "gemma2-9b-it",
+                                "compound-beta",
+                                "compound-beta-mini",
+                                "llama-3.1-8b-instant",
+                                "llama3-70b-8192",
+                                "llama3-8b-8192",
+                                "meta-llama/llama-4-maverick-17b-128e-instruct",
+                                "meta-llama/llama-4-scout-17b-16e-instruct",
+                                "meta-llama/llama-4-12b",
+                                "meta-llama/llama-prompt-guard-2-22m",
+                                "meta-llama/llama-prompt-guard-2-86m",
+                                "mistral-saba-24b"
+                            ],
                             key="model")
-
 # File upload
 uploaded_files = st.sidebar.file_uploader(
     "Upload files", 
@@ -107,7 +126,7 @@ uploaded_files = st.sidebar.file_uploader(
 )
 
 # Chunk settings
-st.sidebar.subheader("📄 Chunk Settings")
+st.sidebar.subheader("📄 Chunk and Retriever Settings")
 chunk_size = st.sidebar.slider("Chunk Size", min_value=100, max_value=2000, value=500, step=100,
                               help="Size of text chunks for processing")
 chunk_overlap = st.sidebar.slider("Chunk Overlap", min_value=0, max_value=500, value=50, step=10,
