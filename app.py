@@ -54,7 +54,7 @@ def rag_answer(query: str, api_key: str, model: str, files, chunk_size: int, chu
                 return "⚠️ No documents found. Please upload some files first and wait for them to be processed."
         
         # Get answer
-        response = pipe.chain(query, k=5)
+        response = pipe.chain(query, k=k_retrievals)
         return response
         
     except Exception as e:
@@ -112,7 +112,8 @@ chunk_size = st.sidebar.slider("Chunk Size", min_value=100, max_value=2000, valu
                               help="Size of text chunks for processing")
 chunk_overlap = st.sidebar.slider("Chunk Overlap", min_value=0, max_value=500, value=50, step=10,
                                  help="Overlap between consecutive chunks")
-
+k_retrievals = st.sidebar.slider("Chunk Overlap", min_value=1, max_value=30, value=10, step=1,
+                                 help="Overlap between consecutive chunks")
 # Reset button
 if st.sidebar.button("🔄 Reset Session"):
     for key in list(st.session_state.keys()):
