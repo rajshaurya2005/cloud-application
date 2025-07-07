@@ -114,7 +114,6 @@ model = st.sidebar.selectbox("Model",
                                 "meta-llama/llama-4-12b",
                                 "meta-llama/llama-prompt-guard-2-22m",
                                 "meta-llama/llama-prompt-guard-2-86m",
-                                "mistral-saba-24b"
                             ],
                             key="model")
 # File upload
