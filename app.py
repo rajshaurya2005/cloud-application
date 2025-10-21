@@ -3,12 +3,13 @@ import tempfile
 import os
 from pathlib import Path
 import shutil
+from typing import List
 
 # Import your fixed classes
 from rag_pipeline import Pipe
 
-def save_uploaded_files(uploaded_files):
-    """Save uploaded files to temporary directory"""
+def save_uploaded_files(uploaded_files: List[st.runtime.uploaded_file_manager.UploadedFile]) -> tuple[list[str], str]:
+    """Save uploaded files to a temporary directory."""
     temp_dir = tempfile.mkdtemp()
     file_paths = []
     
@@ -21,14 +22,14 @@ def save_uploaded_files(uploaded_files):
     
     return file_paths, temp_dir
 
-def initialize_rag_pipeline(api_key, model):
-    """Initialize RAG pipeline and store in session state"""
+def initialize_rag_pipeline(api_key: str, model: str) -> Pipe:
+    """Initialize RAG pipeline and store in session state."""
     if "rag_pipeline" not in st.session_state:
         st.session_state.rag_pipeline = Pipe(api_key=api_key, model=model)
     return st.session_state.rag_pipeline
 
-def rag_answer(query: str, api_key: str, model: str, files, chunk_size: int, chunk_overlap: int) -> str:
-    """Process RAG query with actual implementation"""
+def rag_answer(query: str, api_key: str, model: str, files: List[st.runtime.uploaded_file_manager.UploadedFile], chunk_size: int, chunk_overlap: int, k_retrievals: int) -> str:
+    """Process a RAG query."""
     try:
         # Initialize pipeline
         pipe = initialize_rag_pipeline(api_key, model)
@@ -48,10 +49,7 @@ def rag_answer(query: str, api_key: str, model: str, files, chunk_size: int, chu
         
         # Check if we have documents loaded
         if pipe.vector_store.db is None:
-            try:
-                pipe.load_existing_vector_store()
-            except:
-                return "⚠️ No documents found. Please upload some files first and wait for them to be processed."
+            return "⚠️ No documents found. Please upload some files first and wait for them to be processed."
         
         # Get answer
         response = pipe.chain(query, k=k_retrievals)
@@ -94,26 +92,13 @@ api_key = st.sidebar.text_input("Groq API Key", type="password", key="api_key",
                                help="Get your API key from https://console.groq.com/keys")
 
 # Model selection
-# model = st.sidebar.selectbox("Model", 
-#                             ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "mixtral-8x7b-32768"], 
-#                             key="model")
 model = st.sidebar.selectbox("Model",
                             [
                                 "llama-3.3-70b-versatile",
-                                "qwen-qwq-32b",
-                                "qwen/qwen3-32b",
-                                "deepseek-r1-distill-llama-70b",
-                                "gemma2-9b-it",
-                                "compound-beta",
-                                "compound-beta-mini",
-                                "llama-3.1-8b-instant",
                                 "llama3-70b-8192",
                                 "llama3-8b-8192",
-                                "meta-llama/llama-4-maverick-17b-128e-instruct",
-                                "meta-llama/llama-4-scout-17b-16e-instruct",
-                                "meta-llama/llama-4-12b",
-                                "meta-llama/llama-prompt-guard-2-22m",
-                                "meta-llama/llama-prompt-guard-2-86m",
+                                "mixtral-8x7b-32768",
+                                "gemma-7b-it",
                             ],
                             key="model")
 # File upload
@@ -130,8 +115,8 @@ chunk_size = st.sidebar.slider("Chunk Size", min_value=100, max_value=2000, valu
                               help="Size of text chunks for processing")
 chunk_overlap = st.sidebar.slider("Chunk Overlap", min_value=0, max_value=500, value=50, step=10,
                                  help="Overlap between consecutive chunks")
-k_retrievals = st.sidebar.slider("Chunk Overlap", min_value=1, max_value=30, value=10, step=1,
-                                 help="Overlap between consecutive chunks")
+k_retrievals = st.sidebar.slider("Number of Retrievals", min_value=1, max_value=30, value=10, step=1,
+                                 help="Number of relevant chunks to retrieve")
 # Reset button
 if st.sidebar.button("🔄 Reset Session"):
     for key in list(st.session_state.keys()):
@@ -206,7 +191,8 @@ if prompt := st.chat_input("Ask me about your documents...", key="chat_input"):
                 model,
                 uploaded_files,
                 chunk_size,
-                chunk_overlap
+                chunk_overlap,
+                k_retrievals
             )
             st.markdown(response)
     
@@ -217,22 +203,20 @@ if prompt := st.chat_input("Ask me about your documents...", key="chat_input"):
 with st.expander("ℹ️ How to use this RAG Chatbot"):
     st.markdown("""
     ### Getting Started:
-    1. **🔑 Add your Groq API key** in the sidebar
-       - Get it from [console.groq.com/keys](https://console.groq.com/keys)
-    2. **📄 Upload your documents** (PDF, TXT, CSV supported)
-    3. **⚙️ Adjust chunk settings** if needed (optional)
-    4. **💬 Ask questions** about your documents
+    1. **🔑 Add your Groq API key** in the sidebar. You can get one from [console.groq.com/keys](https://console.groq.com/keys).
+    2. **📄 Upload your documents** (PDF, TXT, CSV supported).
+    3. **⚙️ Adjust chunk and retrieval settings** in the sidebar if needed.
+    4. **💬 Ask questions** about your documents in the chat input box.
     
     ### Features:
-    - **Multiple file support**: Upload multiple documents at once
-    - **Persistent chat**: Your conversation history is maintained
-    - **Configurable chunking**: Adjust how documents are split
-    - **Multiple models**: Choose from different LLM models
+    - **Multiple file support**: Upload and chat with multiple documents at once.
+    - **Persistent chat**: Your conversation history is maintained for the session.
+    - **Configurable processing**: Adjust how documents are chunked and retrieved.
+    - **Multiple models**: Choose from a variety of powerful language models.
     
     ### Tips:
-    - Start with specific questions about your documents
-    - If answers seem incomplete, try rephrasing your question
-    - Use the reset button to clear session and start fresh
+    - If you upload new files, they will be processed with your next question.
+    - Use the "Reset Session" button to clear all data and start fresh.
     """)
 
 # Footer
@@ -245,3 +229,4 @@ if st.session_state.get("processed_files"):
     st.sidebar.success(f"✅ {len(st.session_state.processed_files)} files processed")
     st.sidebar.info(f"🔧 Model: {model}")
     st.sidebar.info(f"📏 Chunk size: {chunk_size}")
+    st.sidebar.info(f"🔍 Retrievals: {k_retrievals}")
