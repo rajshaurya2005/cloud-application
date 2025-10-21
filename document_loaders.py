@@ -1,5 +1,5 @@
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class DocumentParsers:
     def file_to_text(self, file_path):    
